@@ -193,28 +193,23 @@ class TemporaryPatientTokenController extends Controller
             ]);
             
             try {
-                // Get patient data using PatientService
-                $serviceData = $this->patientService->getPatientData($patient);
-                
-                // Transform service data to template format
+                // Use simple data structure that works (same as MedicalRecordController)
                 $patientData = [
-                    'patient_name' => $serviceData['info']['full_name'] ?? $patient->full_name ?? 'Unknown',
-                    'patient_data' => ($serviceData['info']['birth_place'] ?? $patient->birth_place ?? 'Unknown') . ', ' . 
-                                    (isset($serviceData['info']['date_of_birth']) ? $serviceData['info']['date_of_birth'] : 
-                                    ($patient->date_of_birth ? $patient->date_of_birth->format('d M Y') : 'Unknown')),
-                    'drug_allergies' => $serviceData['allergies'] ?? [],
-                    'prescription' => $serviceData['latest_record']['prescription'] ?? 'Tidak ada data resep',
-                    'height' => $serviceData['info']['height'] ?? $patient->height ?? 0,
-                    'weight' => $serviceData['info']['weight'] ?? $patient->weight ?? 0,
-                    'bmi' => $serviceData['info']['bmi'] ?? $patient->bmi ?? '0',
-                    'irs1_rs1801278' => $serviceData['genetic_results']['irs1_rs1801278'] ?? $patient->irs1_rs1801278 ?? 'Unknown',
-                    'drugs_consumed' => $serviceData['latest_record']['drugs_consumed'] ?? [],
-                    'diabetes_diagnosed_since' => $serviceData['diabetes_diagnosis_date'] ? 
-                        $serviceData['diabetes_diagnosis_date']->format('d M Y') : 
-                        ($patient->diabetes_diagnosis_date ? $patient->diabetes_diagnosis_date->format('d M Y') : '-')
+                    'patient_name' => $patient->full_name ?? 'Unknown',
+                    'patient_data' => ($patient->birth_place ?? 'Unknown') . ', ' . 
+                                    ($patient->date_of_birth ? $patient->date_of_birth->format('d M Y') : 'Unknown'),
+                    'drug_allergies' => $patient->drugAllergies->pluck('drug_name')->toArray(),
+                    'prescription' => $patient->medicalRecords()->latest()->first()->prescription ?? 'Tidak ada data resep',
+                    'height' => $patient->height ?? 0,
+                    'weight' => $patient->weight ?? 0,
+                    'bmi' => $patient->bmi ?? '0',
+                    'irs1_rs1801278' => $patient->irs1_rs1801278 ?? 'Unknown',
+                    'drugs_consumed' => $patient->medicalRecords()->latest()->first()->drugList ?? [],
+                    'diabetes_diagnosed_since' => $patient->diabetes_diagnosis_date ? 
+                        $patient->diabetes_diagnosis_date->format('d M Y') : '-'
                 ];
             } catch (\Exception $e) {
-                Log::error('Error in PatientService::getPatientData', [
+                Log::error('Error getting patient data', [
                     'patient_id' => $patient->id,
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
