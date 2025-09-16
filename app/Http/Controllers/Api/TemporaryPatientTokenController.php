@@ -331,9 +331,7 @@ class TemporaryPatientTokenController extends Controller
             ]);
 
             // Cari token yang valid - gunakan method yang sama dengan API
-            $tokenRecord = TemporaryPatientToken::where('token', $token)
-                ->where('expires_at', '>', now())
-                ->first();
+            $tokenRecord = TemporaryPatientToken::findValidToken($token);
             
             Log::info('Web token lookup result', [
                 'token_found' => $tokenRecord ? 'yes' : 'no',
@@ -373,12 +371,16 @@ class TemporaryPatientTokenController extends Controller
             // Get patient data
             $patientData = $this->patientService->getPatientData($patient);
             
+            // Mark token as used (sama seperti API method)
+            $tokenRecord->update(['is_used' => true, 'used_at' => now()]);
+            
             // Log akses
             Log::info('Patient web interface accessed via token', [
                 'token_id' => $tokenRecord->id,
                 'patient_id' => $patient->id,
                 'ip' => request()->ip(),
-                'user_agent' => request()->userAgent()
+                'user_agent' => request()->userAgent(),
+                'token_marked_used' => true
             ]);
 
             return view('patient-token', [
