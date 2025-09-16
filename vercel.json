@@ -75,6 +75,6 @@
     "DB_SSLMODE": "require",
     "MIGRATION_TOKEN": "vercel_migrate_2024_secure_token"
   },
-  "buildCommand": "npm run build-vercel && php artisan migrate --force",
+  "buildCommand": "npm run build-vercel",
   "outputDirectory": "dist"
 }
