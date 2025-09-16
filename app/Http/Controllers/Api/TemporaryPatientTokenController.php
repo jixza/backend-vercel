@@ -179,11 +179,11 @@ class TemporaryPatientTokenController extends Controller
                     'token' => substr($token, 0, 10) . '...'
                 ]);
                 
-                return response()->json([
+                return view('token-error', [
                     'error' => 'Data pasien tidak ditemukan',
-                    'message' => 'Data pasien tidak tersedia di sistem',
+                    'message' => 'Data pasien tidak tersedia di sistem. Silakan hubungi petugas medis untuk mendapatkan bantuan.',
                     'code' => 'PATIENT_NOT_FOUND'
-                ], 404);
+                ])->setStatusCode(404);
             }
             
             // Log patient details
@@ -194,7 +194,25 @@ class TemporaryPatientTokenController extends Controller
             
             try {
                 // Get patient data using PatientService
-                $patientData = $this->patientService->getPatientData($patient);
+                $serviceData = $this->patientService->getPatientData($patient);
+                
+                // Transform service data to template format
+                $patientData = [
+                    'patient_name' => $serviceData['info']['full_name'] ?? $patient->full_name ?? 'Unknown',
+                    'patient_data' => ($serviceData['info']['birth_place'] ?? $patient->birth_place ?? 'Unknown') . ', ' . 
+                                    (isset($serviceData['info']['date_of_birth']) ? $serviceData['info']['date_of_birth'] : 
+                                    ($patient->date_of_birth ? $patient->date_of_birth->format('d M Y') : 'Unknown')),
+                    'drug_allergies' => $serviceData['allergies'] ?? [],
+                    'prescription' => $serviceData['latest_record']['prescription'] ?? 'Tidak ada data resep',
+                    'height' => $serviceData['info']['height'] ?? $patient->height ?? 0,
+                    'weight' => $serviceData['info']['weight'] ?? $patient->weight ?? 0,
+                    'bmi' => $serviceData['info']['bmi'] ?? $patient->bmi ?? '0',
+                    'irs1_rs1801278' => $serviceData['genetic_results']['irs1_rs1801278'] ?? $patient->irs1_rs1801278 ?? 'Unknown',
+                    'drugs_consumed' => $serviceData['latest_record']['drugs_consumed'] ?? [],
+                    'diabetes_diagnosed_since' => $serviceData['diabetes_diagnosis_date'] ? 
+                        $serviceData['diabetes_diagnosis_date']->format('d M Y') : 
+                        ($patient->diabetes_diagnosis_date ? $patient->diabetes_diagnosis_date->format('d M Y') : '-')
+                ];
             } catch (\Exception $e) {
                 Log::error('Error in PatientService::getPatientData', [
                     'patient_id' => $patient->id,
@@ -246,10 +264,15 @@ class TemporaryPatientTokenController extends Controller
         } catch (\Exception $e) {
             Log::error('Error accessing patient data by token', [
                 'token' => substr($token, 0, 10) . '...',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
-            return $this->errorResponse('Failed to access patient data', 500, 500);
+            return view('token-error', [
+                'error' => 'Terjadi kesalahan server',
+                'message' => 'Maaf, terjadi kesalahan saat memuat data pasien. Silakan coba lagi atau hubungi petugas medis.',
+                'code' => 'SERVER_ERROR'
+            ])->setStatusCode(500);
         }
     }
 
