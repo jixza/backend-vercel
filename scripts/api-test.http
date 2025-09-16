@@ -1,0 +1,35 @@
+# Health Check Endpoint
+GET http://localhost:8000/api/health
+
+### Generate Temporary Token
+POST http://localhost:8000/api/patient/tokens/generate/1
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+
+{
+  "expiration_minutes": 30
+}
+
+### Access Patient Data via Token (Public)
+GET http://localhost:8000/api/patient/token/YOUR_TEMPORARY_TOKEN
+
+### List Active Tokens
+GET http://localhost:8000/api/patient/tokens/active
+Authorization: Bearer YOUR_ACCESS_TOKEN
+
+### Revoke Specific Token
+DELETE http://localhost:8000/api/patient/tokens/revoke/YOUR_TEMPORARY_TOKEN
+Authorization: Bearer YOUR_ACCESS_TOKEN
+
+### Revoke All Tokens
+DELETE http://localhost:8000/api/patient/tokens/revoke-all
+Authorization: Bearer YOUR_ACCESS_TOKEN
+
+### Login to get access token
+POST http://localhost:8000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password"
+}

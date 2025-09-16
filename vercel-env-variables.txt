@@ -1,0 +1,123 @@
+# ====================================================================
+# Environment Variables untuk Import ke Vercel Dashboard
+# PG Card MVP - Supabase PostgreSQL Configuration
+# ====================================================================
+
+# Copy paste environment variables berikut ke Vercel dashboard
+# Atau gunakan script vercel-env-setup.bat untuk set via CLI
+
+# 📋 CORE APPLICATION SETTINGS
+APP_NAME=PG Card MVP
+APP_ENV=production
+APP_KEY=base64:6w80b2/0FoV0rvsHQL/4xpR1Lyvy3LtFcK9G+CN4iwc=
+APP_DEBUG=false
+APP_TIMEZONE=Asia/Jakarta
+APP_URL=https://your-app-name.vercel.app
+APP_LOCALE=id
+APP_FALLBACK_LOCALE=en
+
+# 📊 LOGGING CONFIGURATION
+LOG_CHANNEL=stderr
+LOG_LEVEL=error
+LOG_DEPRECATIONS_CHANNEL=null
+
+# 🗄️ SUPABASE DATABASE CONFIGURATION
+DATABASE_URL=postgresql://postgres:12345678@db.obwzncalwdmfjnkkqpjh.supabase.co:5432/postgres
+DB_CONNECTION=pgsql
+DB_HOST=db.obwzncalwdmfjnkkqpjh.supabase.co
+DB_PORT=5432
+DB_DATABASE=postgres
+DB_USERNAME=postgres
+DB_PASSWORD=12345678
+
+# 🍪 SESSION CONFIGURATION (Vercel Optimized)
+SESSION_DRIVER=cookie
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=true
+SESSION_PATH=/
+SESSION_DOMAIN=null
+
+# 💾 CACHE CONFIGURATION (Vercel Limitations)
+CACHE_STORE=array
+CACHE_PREFIX=pgcard
+
+# 🔄 QUEUE CONFIGURATION (Vercel Limitations)
+QUEUE_CONNECTION=sync
+QUEUE_FAILED_DRIVER=null
+
+# 📧 MAIL CONFIGURATION
+MAIL_MAILER=log
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS=noreply@your-domain.com
+MAIL_FROM_NAME=PG Card MVP
+
+# 📁 FILESYSTEM CONFIGURATION
+FILESYSTEM_DISK=local
+
+# 🌐 CORS CONFIGURATION
+CORS_ALLOWED_ORIGINS=https://your-frontend-domain.com,https://your-app-name.vercel.app
+CORS_ALLOWED_HEADERS=*
+CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,OPTIONS
+CORS_EXPOSED_HEADERS=
+CORS_MAX_AGE=0
+CORS_SUPPORTS_CREDENTIALS=true
+
+# 🛡️ RATE LIMITING
+RATE_LIMIT_API=60,1
+RATE_LIMIT_LOGIN=5,1
+
+# 🔑 TEMPORARY TOKEN CONFIGURATION
+TEMP_TOKEN_EXPIRE_MINUTES=60
+TEMP_TOKEN_MAX_USES=10
+TEMP_TOKEN_LENGTH=32
+
+# 📱 QR CODE CONFIGURATION
+QR_CODE_SIZE=200
+QR_CODE_MARGIN=2
+QR_CODE_ERROR_CORRECTION=M
+
+# 📤 FILE UPLOAD CONFIGURATION
+MAX_UPLOAD_SIZE=4096
+ALLOWED_FILE_TYPES=jpg,jpeg,png,pdf
+
+# 📄 PAGINATION
+PAGINATION_DEFAULT_SIZE=15
+PAGINATION_MAX_SIZE=100
+
+# 🚀 VERCEL SPECIFIC
+VERCEL=1
+VERCEL_ENV=production
+VERCEL_REGION=sin1
+
+# 🐘 PHP CONFIGURATION
+PHP_MEMORY_LIMIT=128M
+PHP_MAX_EXECUTION_TIME=30
+
+# 🚫 DISABLE UNSUPPORTED FEATURES
+TELESCOPE_ENABLED=false
+DEBUGBAR_ENABLED=false
+HORIZON_ENABLED=false
+
+# 🏫 CAMPUS SPECIFIC SETTINGS
+CAMPUS_NAME=Universitas Campus
+CAMPUS_CODE=UNIV
+CAMPUS_TIMEZONE=Asia/Jakarta
+CAMPUS_API_ENABLED=false
+CAMPUS_ALLOWED_IPS=*
+CAMPUS_PROXY_ENABLED=false
+
+# ====================================================================
+# IMPORTANT NOTES:
+# ====================================================================
+# 1. Ganti 'your-app-name' dengan nama aplikasi Vercel Anda
+# 2. Ganti 'your-frontend-domain.com' dengan domain frontend Anda
+# 3. Untuk production, pertimbangkan ganti APP_KEY dengan yang baru:
+#    php artisan key:generate --show
+# 4. Pastikan Supabase database sudah running dan accessible
+# 5. Set environment variables satu per satu di Vercel dashboard
+#    atau gunakan script vercel-env-setup.bat
+# ====================================================================

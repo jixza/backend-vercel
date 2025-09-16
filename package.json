@@ -1,0 +1,22 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build && mkdir -p dist && cp -r public/* dist/ 2>/dev/null || cp -r public/. dist/",
+        "build-vercel": "vite build && mkdir -p dist && cp -r public/* dist/ 2>/dev/null || cp -r public/. dist/",
+        "dev": "vite",
+        "heroku-postbuild": "npm run build && composer install --no-dev --optimize-autoloader"
+    },
+    "engines": {
+        "node": ">=16.0.0"
+    },
+    "devDependencies": {
+        "autoprefixer": "^10.4.20",
+        "axios": "^1.7.4",
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^1.2.0",
+        "postcss": "^8.4.47",
+        "tailwindcss": "^3.4.13",
+        "vite": "^6.0.11"
+    }
+}

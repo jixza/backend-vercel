@@ -1,0 +1,79 @@
+{
+  "version": 2,
+  "framework": null,
+  "functions": {
+    "api/index.php": {
+      "runtime": "vercel-php@0.7.4"
+    }
+  },
+   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.php"
+    },
+    {
+      "src": "/admin/(.*)",
+      "dest": "/api/index.php"
+    },
+    {
+      "src": "/patient/token/(.*)",
+      "dest": "/api/index.php"
+    },
+    {
+      "src": "/css/(.*)",
+      "dest": "/public/css/$1"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/public/js/$1"
+    },
+    {
+      "src": "/images/(.*)",
+      "dest": "/public/images/$1"
+    },
+    {
+      "src": "/build/(.*)",
+      "dest": "/public/build/$1"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/public/favicon.ico"
+    },
+    {
+      "src": "/robots.txt",
+      "dest": "/public/robots.txt"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.php"
+    }
+  ],
+  "env": {
+    "VERCEL": "1",
+    "APP_ENV": "production",
+    "APP_DEBUG": "true",
+    "APP_KEY": "base64:6w80b2/0FoV0rvsHQL/4xpR1Lyvy3LtFcK9G+CN4iwc=",
+    "APP_URL": "https://laravel-pg-card.vercel.app",
+    
+    "APP_CONFIG_CACHE": "/tmp/config.php",
+    "APP_EVENTS_CACHE": "/tmp/events.php",
+    "APP_PACKAGES_CACHE": "/tmp/packages.php",
+    "APP_ROUTES_CACHE": "/tmp/routes.php",
+    "APP_SERVICES_CACHE": "/tmp/services.php",
+    "VIEW_COMPILED_PATH": "/tmp",
+    
+    "CACHE_DRIVER": "array",
+    "LOG_CHANNEL": "stderr",
+    "SESSION_DRIVER": "cookie",
+    
+    "DB_CONNECTION": "pgsql",
+    "DB_HOST": "aws-1-ap-southeast-1.pooler.supabase.com",
+    "DB_PORT": "6543",
+    "DB_DATABASE": "postgres",
+    "DB_USERNAME": "postgres.obwzncalwdmfjnkkqpjh",
+    "DB_PASSWORD": "12345678",
+    "DB_SSLMODE": "require"
+  },
+  "buildCommand": "npm run build-vercel",
+  "outputDirectory": "dist"
+}
