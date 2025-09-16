@@ -179,7 +179,7 @@ class TemporaryPatientTokenController extends Controller
                 ]);
             }
 
-            // Log akses (without increment since access_count column doesn't exist)
+            // Log akses dan mark token sebagai used setelah akses pertama
             Log::info('Patient data accessed via temporary token', [
                 'token_id' => $tokenRecord->id,
                 'patient_id' => $patient->id,
@@ -187,8 +187,8 @@ class TemporaryPatientTokenController extends Controller
                 'user_agent' => request()->userAgent()
             ]);
 
-            // DON'T mark token as used - allow multiple access until expiration
-            // $tokenRecord->markAsUsed(); // Commented out for multi-use
+            // Mark token as used setelah akses pertama untuk keamanan
+            $tokenRecord->markAsUsed();
 
             return $this->successResponse('Patient data retrieved successfully', [
                 'patient_data' => $patientData,
@@ -196,8 +196,9 @@ class TemporaryPatientTokenController extends Controller
                     'created_at' => $tokenRecord->created_at,
                     'created_by' => $tokenRecord->createdBy->name,
                     'expires_at' => $tokenRecord->expires_at,
-                    'is_used' => false, // Keep as reusable
-                    'can_reuse' => true
+                    'is_used' => true, // Token sudah digunakan
+                    'can_reuse' => false, // Tidak bisa digunakan lagi
+                    'message' => 'Token telah digunakan dan tidak bisa diakses lagi'
                 ]
             ]);
 

@@ -11,7 +11,7 @@ vercel env add APP_ENV --value="production" --yes
 vercel env add APP_KEY --value="base64:6w80b2/0FoV0rvsHQL/4xpR1Lyvy3LtFcK9G+CN4iwc=" --yes
 vercel env add APP_DEBUG --value="false" --yes
 vercel env add APP_TIMEZONE --value="Asia/Jakarta" --yes
-vercel env add APP_URL --value="https://laravel-6ve8lj9y3cx-xinzzus-projects.vercel.app" --yes
+vercel env add APP_URL --value="https://backend-pg-vercel.vercel.app" --yes
 vercel env add APP_LOCALE --value="id" --yes
 vercel env add APP_FALLBACK_LOCALE --value="en" --yes
 

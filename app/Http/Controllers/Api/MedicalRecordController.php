@@ -83,8 +83,25 @@ class MedicalRecordController extends Controller
         try {
             $user = Auth::user();
             
-            // Revoke token lama yang masih aktif untuk patient ini
-            TemporaryPatientToken::revokeAllForPatient($patientId);
+            // Cek apakah ada token valid yang masih bisa digunakan
+            $existingToken = TemporaryPatientToken::where('patient_id', $patientId)
+                ->where('is_used', false)
+                ->where('expires_at', '>', now())
+                ->first();
+            
+            if ($existingToken) {
+                // Gunakan token yang sudah ada jika masih valid
+                $baseUrl = rtrim(config('app.url'), '/');
+                return $baseUrl . "/api/patient/token/{$existingToken->token}";
+            }
+
+            // Revoke token lama yang sudah expired atau used
+            TemporaryPatientToken::where('patient_id', $patientId)
+                ->where(function($query) {
+                    $query->where('is_used', true)
+                          ->orWhere('expires_at', '<=', now());
+                })
+                ->delete();
 
             // Buat token baru dengan expiry 2 jam
             $token = TemporaryPatientToken::createForPatient(
