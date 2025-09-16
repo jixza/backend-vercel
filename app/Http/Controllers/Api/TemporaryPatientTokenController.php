@@ -94,8 +94,71 @@ class TemporaryPatientTokenController extends Controller
     public function accessPatientByToken($token)
     {
         try {
-            // Cari token yang valid
-            $tokenRecord = TemporaryPatientToken::findValidToken($token);
+            Log::info('Token access attempt', [
+                'token' => substr($token, 0, 10) . '...',
+                'token_length' => strlen($token),
+                'ip' => request()->ip(),
+                'user_agent' => request()->userAgent()
+            ]);
+
+            // Validate token format
+            if (strlen($token) < 32) {
+                Log::warning('Invalid token format', ['token_length' => strlen($token)]);
+                return $this->errorResponse('Invalid token format', 400, 400);
+            }
+
+            // Cari token di database (tanpa filter valid dulu)
+            $tokenRecord = TemporaryPatientToken::where('token', $token)->first();
+            
+            Log::info('Token search result', [
+                'token_found' => $tokenRecord ? true : false,
+                'token_id' => $tokenRecord ? $tokenRecord->id : null,
+                'patient_id' => $tokenRecord ? $tokenRecord->patient_id : null,
+                'expires_at' => $tokenRecord ? $tokenRecord->expires_at : null,
+                'is_used' => $tokenRecord ? $tokenRecord->is_used : null,
+                'current_time' => now()
+            ]);
+            
+            if (!$tokenRecord) {
+                Log::warning('Token not found in database', [
+                    'token' => substr($token, 0, 10) . '...'
+                ]);
+                
+                return response()->json([
+                    'error' => 'Token tidak ditemukan',
+                    'message' => 'Token mungkin sudah expired atau tidak valid. Silakan minta link baru.',
+                    'code' => 'TOKEN_NOT_FOUND'
+                ], 404);
+            }
+
+            // Cek apakah token sudah digunakan
+            if ($tokenRecord->is_used) {
+                Log::warning('Token already used', [
+                    'token_id' => $tokenRecord->id,
+                    'used_at' => $tokenRecord->used_at
+                ]);
+                
+                return response()->json([
+                    'error' => 'Token sudah digunakan',
+                    'message' => 'Link ini sudah pernah diakses. Silakan minta link baru.',
+                    'code' => 'TOKEN_ALREADY_USED'
+                ], 410);
+            }
+
+            // Cek apakah token sudah expired
+            if ($tokenRecord->expires_at->isPast()) {
+                Log::warning('Token expired', [
+                    'token_id' => $tokenRecord->id,
+                    'expires_at' => $tokenRecord->expires_at,
+                    'current_time' => now()
+                ]);
+                
+                return response()->json([
+                    'error' => 'Token sudah expired',
+                    'message' => 'Link sudah kedaluwarsa. Silakan minta link baru.',
+                    'code' => 'TOKEN_EXPIRED'
+                ], 410);
+            }
             
             if (!$tokenRecord) {
                 Log::warning('Invalid or expired token accessed', [

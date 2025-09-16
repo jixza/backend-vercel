@@ -83,25 +83,9 @@ class MedicalRecordController extends Controller
         try {
             $user = Auth::user();
             
-            // Cek apakah ada token valid yang masih bisa digunakan
-            $existingToken = TemporaryPatientToken::where('patient_id', $patientId)
-                ->where('is_used', false)
-                ->where('expires_at', '>', now())
-                ->first();
-            
-            if ($existingToken) {
-                // Gunakan token yang sudah ada jika masih valid
-                $baseUrl = rtrim(config('app.url'), '/');
-                return $baseUrl . "/api/patient/token/{$existingToken->token}";
-            }
-
-            // Revoke token lama yang sudah expired atau used
-            TemporaryPatientToken::where('patient_id', $patientId)
-                ->where(function($query) {
-                    $query->where('is_used', true)
-                          ->orWhere('expires_at', '<=', now());
-                })
-                ->delete();
+            // SELALU generate token baru setiap kali medical record dipanggil
+            // Revoke SEMUA token lama untuk patient ini (expired atau belum)
+            TemporaryPatientToken::where('patient_id', $patientId)->delete();
 
             // Buat token baru dengan expiry 2 jam
             $token = TemporaryPatientToken::createForPatient(
@@ -117,6 +101,10 @@ class MedicalRecordController extends Controller
             return $baseUrl . "/api/patient/token/{$token->token}";
             
         } catch (\Exception $e) {
+            \Log::error('Error generating QR link', [
+                'patient_id' => $patientId,
+                'error' => $e->getMessage()
+            ]);
             // Jika gagal generate, return null
             return null;
         }
