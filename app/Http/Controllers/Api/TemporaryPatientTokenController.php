@@ -346,7 +346,7 @@ class TemporaryPatientTokenController extends Controller
                 Log::warning('Web token not found or expired', [
                     'token' => substr($token, 0, 10) . '...'
                 ]);
-                return view('patient.token-invalid', [
+                return view('token-error', [
                     'message' => 'Token tidak valid atau sudah kedaluwarsa'
                 ]);
             }
@@ -365,7 +365,7 @@ class TemporaryPatientTokenController extends Controller
                     'token_id' => $tokenRecord->id,
                     'patient_id' => $tokenRecord->patient_id
                 ]);
-                return view('patient.token-error', [
+                return view('token-error', [
                     'message' => 'Data pasien tidak ditemukan'
                 ]);
             }
@@ -381,7 +381,7 @@ class TemporaryPatientTokenController extends Controller
                 'user_agent' => request()->userAgent()
             ]);
 
-            return view('patient.show', [
+            return view('patient-token', [
                 'patient' => $patientData,
                 'token_info' => [
                     'created_at' => $tokenRecord->created_at,
@@ -396,7 +396,7 @@ class TemporaryPatientTokenController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            return view('patient.token-error', [
+            return view('token-error', [
                 'message' => 'Terjadi kesalahan saat memuat data pasien'
             ]);
         }
