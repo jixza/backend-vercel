@@ -124,11 +124,11 @@ class TemporaryPatientTokenController extends Controller
                     'token' => substr($token, 0, 10) . '...'
                 ]);
                 
-                return view('token-error', [
+                return response()->view('token-error', [
                     'error' => 'Token tidak ditemukan',
                     'message' => 'Token mungkin sudah expired atau tidak valid. Silakan minta link baru dari aplikasi.',
                     'code' => 'TOKEN_NOT_FOUND'
-                ])->setStatusCode(404);
+                ], 404);
             }
 
             // Cek apakah token sudah digunakan
@@ -138,11 +138,11 @@ class TemporaryPatientTokenController extends Controller
                     'used_at' => $tokenRecord->used_at
                 ]);
                 
-                return view('token-error', [
+                return response()->view('token-error', [
                     'error' => 'Token sudah digunakan',
                     'message' => 'Link ini sudah pernah diakses sebelumnya. Untuk keamanan, setiap link hanya bisa digunakan sekali. Silakan minta link baru dari aplikasi.',
                     'code' => 'TOKEN_ALREADY_USED'
-                ])->setStatusCode(410);
+                ], 410);
             }
 
             // Cek apakah token sudah expired
@@ -153,11 +153,11 @@ class TemporaryPatientTokenController extends Controller
                     'current_time' => now()
                 ]);
                 
-                return view('token-error', [
+                return response()->view('token-error', [
                     'error' => 'Token sudah expired',
                     'message' => 'Link sudah melewati batas waktu berlaku. Silakan minta link baru dari aplikasi.',
                     'code' => 'TOKEN_EXPIRED'
-                ])->setStatusCode(410);
+                ], 410);
             }
             
             if (!$tokenRecord) {
@@ -179,11 +179,11 @@ class TemporaryPatientTokenController extends Controller
                     'token' => substr($token, 0, 10) . '...'
                 ]);
                 
-                return view('token-error', [
+                return response()->view('token-error', [
                     'error' => 'Data pasien tidak ditemukan',
                     'message' => 'Data pasien tidak tersedia di sistem. Silakan hubungi petugas medis untuk mendapatkan bantuan.',
                     'code' => 'PATIENT_NOT_FOUND'
-                ])->setStatusCode(404);
+                ], 404);
             }
             
             // Log patient details
@@ -268,11 +268,11 @@ class TemporaryPatientTokenController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return view('token-error', [
+            return response()->view('token-error', [
                 'error' => 'Terjadi kesalahan server',
                 'message' => 'Maaf, terjadi kesalahan saat memuat data pasien. Silakan coba lagi atau hubungi petugas medis.',
                 'code' => 'SERVER_ERROR'
-            ])->setStatusCode(500);
+            ], 500);
         }
     }
 
@@ -411,11 +411,11 @@ class TemporaryPatientTokenController extends Controller
                 Log::warning('Web token not found or expired', [
                     'token' => substr($token, 0, 10) . '...'
                 ]);
-                return view('token-error', [
+                return response()->view('token-error', [
                     'error' => 'Token tidak valid',
                     'message' => 'Token tidak valid atau sudah kedaluwarsa. Silakan minta link baru.',
                     'code' => 'TOKEN_INVALID'
-                ])->setStatusCode(410);
+                ], 410);
             }
 
             // Ambil data patient
@@ -432,11 +432,11 @@ class TemporaryPatientTokenController extends Controller
                     'token_id' => $tokenRecord->id,
                     'patient_id' => $tokenRecord->patient_id
                 ]);
-                return view('token-error', [
+                return response()->view('token-error', [
                     'error' => 'Data pasien tidak ditemukan',
                     'message' => 'Data pasien tidak tersedia di sistem. Silakan hubungi petugas medis.',
                     'code' => 'PATIENT_NOT_FOUND'
-                ])->setStatusCode(404);
+                ], 404);
             }
             
             // Get patient data
@@ -465,11 +465,11 @@ class TemporaryPatientTokenController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            return view('token-error', [
+            return response()->view('token-error', [
                 'error' => 'Terjadi kesalahan server',
                 'message' => 'Maaf, terjadi kesalahan saat memuat data pasien. Silakan coba lagi atau hubungi petugas medis.',
                 'code' => 'SERVER_ERROR'
-            ])->setStatusCode(500);
+            ], 500);
         }
     }
 }
