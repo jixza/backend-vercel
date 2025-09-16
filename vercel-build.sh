@@ -40,4 +40,11 @@ echo "🔐 Setting permissions..."
 chmod -R 755 storage 2>/dev/null || echo "Permission setting skipped"
 chmod -R 755 bootstrap/cache 2>/dev/null || echo "Bootstrap cache permission skipped"
 
+# Pre-create package manifest files to avoid write issues
+echo "📦 Pre-creating cache files..."
+touch bootstrap/cache/packages.php 2>/dev/null || echo "Package manifest pre-creation skipped"
+touch bootstrap/cache/services.php 2>/dev/null || echo "Services cache pre-creation skipped"
+echo "<?php return [];" > bootstrap/cache/packages.php 2>/dev/null || echo "Package manifest initialization skipped"
+echo "<?php return [];" > bootstrap/cache/services.php 2>/dev/null || echo "Services cache initialization skipped"
+
 echo "✅ Vercel build completed successfully!"

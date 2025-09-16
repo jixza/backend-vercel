@@ -62,6 +62,7 @@
     "APP_SERVICES_CACHE": "/tmp/services.php",
     "VIEW_COMPILED_PATH": "/tmp",
     "BOOTSTRAP_CACHE_PATH": "/tmp",
+    "PACKAGES_MANIFEST_PATH": "/tmp/packages.php",
     
     "CACHE_DRIVER": "array",
     "LOG_CHANNEL": "stderr",
