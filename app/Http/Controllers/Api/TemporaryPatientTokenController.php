@@ -411,9 +411,11 @@ class TemporaryPatientTokenController extends Controller
                 Log::warning('Web token not found or expired', [
                     'token' => substr($token, 0, 10) . '...'
                 ]);
-                return view('patient.token-invalid', [
-                    'message' => 'Token tidak valid atau sudah kedaluwarsa'
-                ]);
+                return view('token-error', [
+                    'error' => 'Token tidak valid',
+                    'message' => 'Token tidak valid atau sudah kedaluwarsa. Silakan minta link baru.',
+                    'code' => 'TOKEN_INVALID'
+                ])->setStatusCode(410);
             }
 
             // Ambil data patient
@@ -430,9 +432,11 @@ class TemporaryPatientTokenController extends Controller
                     'token_id' => $tokenRecord->id,
                     'patient_id' => $tokenRecord->patient_id
                 ]);
-                return view('patient.token-error', [
-                    'message' => 'Data pasien tidak ditemukan'
-                ]);
+                return view('token-error', [
+                    'error' => 'Data pasien tidak ditemukan',
+                    'message' => 'Data pasien tidak tersedia di sistem. Silakan hubungi petugas medis.',
+                    'code' => 'PATIENT_NOT_FOUND'
+                ])->setStatusCode(404);
             }
             
             // Get patient data
@@ -461,9 +465,11 @@ class TemporaryPatientTokenController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            return view('patient.token-error', [
-                'message' => 'Terjadi kesalahan saat memuat data pasien'
-            ]);
+            return view('token-error', [
+                'error' => 'Terjadi kesalahan server',
+                'message' => 'Maaf, terjadi kesalahan saat memuat data pasien. Silakan coba lagi atau hubungi petugas medis.',
+                'code' => 'SERVER_ERROR'
+            ])->setStatusCode(500);
         }
     }
 }
