@@ -3,7 +3,7 @@
     "type": "module",
     "scripts": {
         "build": "vite build && mkdir -p dist && cp -r public/* dist/ 2>/dev/null || cp -r public/. dist/",
-        "build-vercel": "vite build && mkdir -p dist && cp -r public/* dist/ 2>/dev/null || cp -r public/. dist/",
+        "build-vercel": "vite build && mkdir -p dist bootstrap/cache && cp -r public/* dist/ 2>/dev/null || cp -r public/. dist/",
         "dev": "vite",
         "heroku-postbuild": "npm run build && composer install --no-dev --optimize-autoloader"
     },
