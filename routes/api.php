@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\DoctorController;
 use App\Http\Controllers\Api\MedicalRecordController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\TemporaryPatientTokenController;
+use App\Http\Controllers\MigrationController;
 use Illuminate\Support\Facades\Route;
 
 // Health check endpoint untuk monitoring
@@ -32,6 +33,13 @@ Route::get('/health', function () {
             'timestamp' => now()->toISOString()
         ], 500);
     }
+});
+
+// Migration endpoints for database management
+Route::prefix('migrate')->group(function () {
+    Route::get('/status', [MigrationController::class, 'status']);
+    Route::post('/run', [MigrationController::class, 'migrate']);
+    Route::post('/fresh', [MigrationController::class, 'migrateFresh']);
 });
 
 Route::prefix('auth')->group(function () {

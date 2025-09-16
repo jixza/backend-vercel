@@ -94,71 +94,8 @@ class TemporaryPatientTokenController extends Controller
     public function accessPatientByToken($token)
     {
         try {
-            Log::info('Token access attempt', [
-                'token' => substr($token, 0, 10) . '...',
-                'token_length' => strlen($token),
-                'ip' => request()->ip(),
-                'user_agent' => request()->userAgent()
-            ]);
-
-            // Validate token format
-            if (strlen($token) < 32) {
-                Log::warning('Invalid token format', ['token_length' => strlen($token)]);
-                return $this->errorResponse('Invalid token format', 400, 400);
-            }
-
-            // Cari token di database (tanpa filter valid dulu)
-            $tokenRecord = TemporaryPatientToken::where('token', $token)->first();
-            
-            Log::info('Token search result', [
-                'token_found' => $tokenRecord ? true : false,
-                'token_id' => $tokenRecord ? $tokenRecord->id : null,
-                'patient_id' => $tokenRecord ? $tokenRecord->patient_id : null,
-                'expires_at' => $tokenRecord ? $tokenRecord->expires_at : null,
-                'is_used' => $tokenRecord ? $tokenRecord->is_used : null,
-                'current_time' => now()
-            ]);
-            
-            if (!$tokenRecord) {
-                Log::warning('Token not found in database', [
-                    'token' => substr($token, 0, 10) . '...'
-                ]);
-                
-                return response()->view('token-error', [
-                    'error' => 'Token tidak ditemukan',
-                    'message' => 'Token mungkin sudah expired atau tidak valid. Silakan minta link baru dari aplikasi.',
-                    'code' => 'TOKEN_NOT_FOUND'
-                ], 404);
-            }
-
-            // Cek apakah token sudah digunakan
-            if ($tokenRecord->is_used) {
-                Log::warning('Token already used', [
-                    'token_id' => $tokenRecord->id,
-                    'used_at' => $tokenRecord->used_at
-                ]);
-                
-                return response()->view('token-error', [
-                    'error' => 'Token sudah digunakan',
-                    'message' => 'Link ini sudah pernah diakses sebelumnya. Untuk keamanan, setiap link hanya bisa digunakan sekali. Silakan minta link baru dari aplikasi.',
-                    'code' => 'TOKEN_ALREADY_USED'
-                ], 410);
-            }
-
-            // Cek apakah token sudah expired
-            if ($tokenRecord->expires_at->isPast()) {
-                Log::warning('Token expired', [
-                    'token_id' => $tokenRecord->id,
-                    'expires_at' => $tokenRecord->expires_at,
-                    'current_time' => now()
-                ]);
-                
-                return response()->view('token-error', [
-                    'error' => 'Token sudah expired',
-                    'message' => 'Link sudah melewati batas waktu berlaku. Silakan minta link baru dari aplikasi.',
-                    'code' => 'TOKEN_EXPIRED'
-                ], 410);
-            }
+            // Cari token yang valid
+            $tokenRecord = TemporaryPatientToken::findValidToken($token);
             
             if (!$tokenRecord) {
                 Log::warning('Invalid or expired token accessed', [
@@ -179,60 +116,70 @@ class TemporaryPatientTokenController extends Controller
                     'token' => substr($token, 0, 10) . '...'
                 ]);
                 
-                return response()->view('token-error', [
-                    'error' => 'Data pasien tidak ditemukan',
-                    'message' => 'Data pasien tidak tersedia di sistem. Silakan hubungi petugas medis untuk mendapatkan bantuan.',
-                    'code' => 'PATIENT_NOT_FOUND'
-                ], 404);
+                return $this->errorResponse('Patient data not found', 404, 404);
             }
             
-            // Log patient details
+            // Log patient details before calling service
             Log::info('Patient found via token', [
                 'patient_id' => $patient->id,
-                'token_id' => $tokenRecord->id
+                'patient_name' => $patient->full_name,
+                'token_id' => $tokenRecord->id,
+                'patient_model' => get_class($patient),
+                'patient_exists' => $patient->exists,
+                'patient_attributes' => array_keys($patient->getAttributes())
             ]);
             
+            // TEMPORARY: Skip PatientService for now, return basic data
+            if (request()->has('skip_service')) {
+                return $this->successResponse('Basic patient data (service bypassed)', [
+                    'patient_data' => [
+                        'info' => [
+                            'id' => $patient->id,
+                            'full_name' => $patient->full_name,
+                            'nik' => $patient->nik,
+                            'gender' => $patient->gender,
+                            'date_of_birth' => $patient->date_of_birth,
+                            'phone' => $patient->phone,
+                            'address' => $patient->address,
+                        ],
+                        'debug_info' => [
+                            'service_bypassed' => true,
+                            'patient_loaded' => true,
+                            'timestamp' => now()->toISOString()
+                        ]
+                    ],
+                    'token_info' => [
+                        'created_at' => $tokenRecord->created_at,
+                        'expires_at' => $tokenRecord->expires_at,
+                        'can_reuse' => true
+                    ]
+                ]);
+            }
+            
             try {
-                // Use simple data structure that works (same as MedicalRecordController)
-                $patientData = [
-                    'patient_name' => $patient->full_name ?? 'Unknown',
-                    'patient_data' => ($patient->birth_place ?? 'Unknown') . ', ' . 
-                                    ($patient->date_of_birth ? $patient->date_of_birth->format('d M Y') : 'Unknown'),
-                    'drug_allergies' => $patient->drugAllergies->pluck('drug_name')->toArray(),
-                    'prescription' => $patient->medicalRecords()->latest()->first()->prescription ?? 'Tidak ada data resep',
-                    'height' => $patient->height ?? 0,
-                    'weight' => $patient->weight ?? 0,
-                    'bmi' => $patient->bmi ?? '0',
-                    'irs1_rs1801278' => $patient->irs1_rs1801278 ?? 'Unknown',
-                    'drugs_consumed' => $patient->medicalRecords()->latest()->first()->drugList ?? [],
-                    'diabetes_diagnosed_since' => $patient->diabetes_diagnosis_date ? 
-                        $patient->diabetes_diagnosis_date->format('d M Y') : '-'
-                ];
+                $patientData = $this->patientService->getPatientData($patient);
             } catch (\Exception $e) {
-                Log::error('Error getting patient data', [
+                Log::error('Error in PatientService::getPatientData', [
                     'patient_id' => $patient->id,
                     'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
                     'trace' => $e->getTraceAsString()
                 ]);
                 
-                // Fallback: create basic patient data manually
-                $patientData = [
-                    'patient_name' => $patient->full_name ?? 'Unknown',
-                    'patient_data' => ($patient->birth_place ?? 'Unknown') . ', ' . 
-                                    ($patient->date_of_birth ? $patient->date_of_birth->format('d M Y') : 'Unknown'),
-                    'drug_allergies' => [],
-                    'prescription' => 'Tidak ada data resep',
-                    'height' => $patient->height ?? 0,
-                    'weight' => $patient->weight ?? 0,
-                    'bmi' => $patient->bmi ?? '0',
-                    'irs1_rs1801278' => $patient->irs1_rs1801278 ?? 'Unknown',
-                    'drugs_consumed' => [],
-                    'diabetes_diagnosed_since' => $patient->diabetes_diagnosis_date ? 
-                        $patient->diabetes_diagnosis_date->format('d M Y') : '-'
-                ];
+                // Return simplified response for debugging
+                return $this->errorResponse('PatientService Error: ' . $e->getMessage(), 500, 500, [
+                    'debug_fallback' => [
+                        'patient_id' => $patient->id ?? 'null',
+                        'patient_name' => $patient->full_name ?? 'null',
+                        'error_class' => get_class($e),
+                        'token_valid' => true,
+                        'timestamp' => now()->toISOString()
+                    ]
+                ]);
             }
 
-            // Log access and mark token as used
+            // Log akses (without increment since access_count column doesn't exist)
             Log::info('Patient data accessed via temporary token', [
                 'token_id' => $tokenRecord->id,
                 'patient_id' => $patient->id,
@@ -240,34 +187,27 @@ class TemporaryPatientTokenController extends Controller
                 'user_agent' => request()->userAgent()
             ]);
 
-            // Mark token as used after first access for security
-            $tokenRecord->markAsUsed();
+            // DON'T mark token as used - allow multiple access until expiration
+            // $tokenRecord->markAsUsed(); // Commented out for multi-use
 
-            // Return HTML view for browser access
-            return view('patient-token', [
-                'patientData' => $patientData,
-                'tokenInfo' => [
+            return $this->successResponse('Patient data retrieved successfully', [
+                'patient_data' => $patientData,
+                'token_info' => [
                     'created_at' => $tokenRecord->created_at,
-                    'created_by' => $tokenRecord->createdBy->name ?? 'System',
+                    'created_by' => $tokenRecord->createdBy->name,
                     'expires_at' => $tokenRecord->expires_at,
-                    'is_used' => true,
-                    'can_reuse' => false,
-                    'message' => 'Token telah digunakan dan tidak bisa diakses lagi'
+                    'is_used' => false, // Keep as reusable
+                    'can_reuse' => true
                 ]
             ]);
 
         } catch (\Exception $e) {
             Log::error('Error accessing patient data by token', [
                 'token' => substr($token, 0, 10) . '...',
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'error' => $e->getMessage()
             ]);
 
-            return response()->view('token-error', [
-                'error' => 'Terjadi kesalahan server',
-                'message' => 'Maaf, terjadi kesalahan saat memuat data pasien. Silakan coba lagi atau hubungi petugas medis.',
-                'code' => 'SERVER_ERROR'
-            ], 500);
+            return $this->errorResponse('Failed to access patient data', 500, 500);
         }
     }
 
@@ -406,11 +346,9 @@ class TemporaryPatientTokenController extends Controller
                 Log::warning('Web token not found or expired', [
                     'token' => substr($token, 0, 10) . '...'
                 ]);
-                return response()->view('token-error', [
-                    'error' => 'Token tidak valid',
-                    'message' => 'Token tidak valid atau sudah kedaluwarsa. Silakan minta link baru.',
-                    'code' => 'TOKEN_INVALID'
-                ], 410);
+                return view('patient.token-invalid', [
+                    'message' => 'Token tidak valid atau sudah kedaluwarsa'
+                ]);
             }
 
             // Ambil data patient
@@ -427,11 +365,9 @@ class TemporaryPatientTokenController extends Controller
                     'token_id' => $tokenRecord->id,
                     'patient_id' => $tokenRecord->patient_id
                 ]);
-                return response()->view('token-error', [
-                    'error' => 'Data pasien tidak ditemukan',
-                    'message' => 'Data pasien tidak tersedia di sistem. Silakan hubungi petugas medis.',
-                    'code' => 'PATIENT_NOT_FOUND'
-                ], 404);
+                return view('patient.token-error', [
+                    'message' => 'Data pasien tidak ditemukan'
+                ]);
             }
             
             // Get patient data
@@ -460,11 +396,9 @@ class TemporaryPatientTokenController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            return response()->view('token-error', [
-                'error' => 'Terjadi kesalahan server',
-                'message' => 'Maaf, terjadi kesalahan saat memuat data pasien. Silakan coba lagi atau hubungi petugas medis.',
-                'code' => 'SERVER_ERROR'
-            ], 500);
+            return view('patient.token-error', [
+                'message' => 'Terjadi kesalahan saat memuat data pasien'
+            ]);
         }
     }
 }

@@ -72,8 +72,9 @@
     "DB_DATABASE": "postgres",
     "DB_USERNAME": "postgres.obwzncalwdmfjnkkqpjh",
     "DB_PASSWORD": "12345678",
-    "DB_SSLMODE": "require"
+    "DB_SSLMODE": "require",
+    "MIGRATION_TOKEN": "vercel_migrate_2024_secure_token"
   },
-  "buildCommand": "npm run build-vercel",
+  "buildCommand": "npm run build-vercel && php artisan migrate --force",
   "outputDirectory": "dist"
 }
