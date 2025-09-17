@@ -90,8 +90,23 @@ class TemporaryPatientTokenController extends Controller
 
     /**
      * Access patient data menggunakan temporary token
+     * Auto-detect: return JSON for API calls, HTML for browser
      */
     public function accessPatientByToken($token)
+    {
+        // Auto-detect: if request expects JSON, return API response
+        // If browser request, return HTML view
+        if (request()->expectsJson() || request()->header('Accept') === 'application/json') {
+            return $this->handleApiTokenAccess($token);
+        } else {
+            return $this->showPatientByToken($token);
+        }
+    }
+
+    /**
+     * Access patient data menggunakan temporary token (API JSON response)
+     */
+    private function handleApiTokenAccess($token)
     {
         try {
             // Cari token yang valid
