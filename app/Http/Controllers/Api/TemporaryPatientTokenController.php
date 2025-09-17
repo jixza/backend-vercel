@@ -355,14 +355,24 @@ class TemporaryPatientTokenController extends Controller
             Log::info('Web patient lookup result', [
                 'patient_found' => $patient ? 'yes' : 'no',
                 'patient_id' => $tokenRecord->patient_id,
-                'patient_name' => $patient->full_name ?? 'N/A'
+                'patient_name' => $patient->full_name ?? 'N/A',
+                'token_patient_id' => $tokenRecord->patient_id,
+                'patient_model_loaded' => $patient ? get_class($patient) : 'null',
+                'patient_exists_in_db' => $patient ? $patient->exists : false,
+                'raw_patient_query' => \DB::table('patients')->where('id', $tokenRecord->patient_id)->exists()
             ]);
             
             if (!$patient) {
-                Log::warning('Web patient not found', [
+                // Additional debug: try to load patient manually
+                $manualPatient = \App\Models\Patient::find($tokenRecord->patient_id);
+                Log::warning('Web patient not found via relationship', [
                     'token_id' => $tokenRecord->id,
-                    'patient_id' => $tokenRecord->patient_id
+                    'patient_id' => $tokenRecord->patient_id,
+                    'manual_patient_found' => $manualPatient ? 'yes' : 'no',
+                    'manual_patient_name' => $manualPatient->full_name ?? 'N/A',
+                    'total_patients_in_db' => \App\Models\Patient::count()
                 ]);
+                
                 return view('token-error', [
                     'message' => 'Data pasien tidak ditemukan'
                 ]);

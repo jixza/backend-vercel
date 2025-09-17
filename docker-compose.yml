@@ -102,6 +102,26 @@ services:
         sleep 60
       done"
 
+  # Laravel Development Server (Alternative)
+  laravel-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pg_card_dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - pg_card_network  # Fixed: menggunakan network yang benar
+    env_file:
+      - .env
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
 volumes:
   db_data:
   redis_data:
