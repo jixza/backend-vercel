@@ -348,7 +348,7 @@
             </div>
 
             <!-- Diabetes Info -->
-            @if($patientData['diabetes_diagnosed_since'] !== '-')
+            @if(isset($patientData['diabetes_diagnosis_date']) && $patientData['diabetes_diagnosis_date'] !== '-')
             <div class="bg-orange-50 rounded-xl p-6">
                 <h3 class="font-semibold text-orange-800 mb-3 flex items-center">
                     <i class="fas fa-heartbeat text-orange-600 mr-2"></i>
@@ -356,7 +356,7 @@
                 </h3>
                 <p class="text-orange-700">
                     <span class="font-medium">Didiagnosis sejak:</span> 
-                    {{ $patientData['diabetes_diagnosed_since'] }}
+                    {{ $patientData['diabetes_diagnosis_date'] }}
                 </p>
             </div>
             @endif
