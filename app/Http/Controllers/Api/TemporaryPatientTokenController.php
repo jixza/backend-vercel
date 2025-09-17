@@ -402,7 +402,8 @@ class TemporaryPatientTokenController extends Controller
             ]);
 
             return view('patient-token', [
-                'patient' => $patientData,
+                'patientData' => $patientData,
+                'patient' => $patientData, // Keep both for compatibility
                 'token_info' => [
                     'created_at' => $tokenRecord->created_at,
                     'expires_at' => $tokenRecord->expires_at,
