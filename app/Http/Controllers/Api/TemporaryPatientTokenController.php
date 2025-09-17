@@ -364,27 +364,13 @@ class TemporaryPatientTokenController extends Controller
                 ]);
             }
 
-            // Ambil data patient
-            $patient = $tokenRecord->patient;
-            
-            Log::info('Web patient lookup result', [
-                'patient_found' => $patient ? 'yes' : 'no',
-                'patient_id' => $tokenRecord->patient_id,
-                'patient_name' => $patient->full_name ?? 'N/A',
-                'token_patient_id' => $tokenRecord->patient_id,
-                'patient_model_loaded' => $patient ? get_class($patient) : 'null',
-                'patient_exists_in_db' => $patient ? $patient->exists : false,
-                'raw_patient_query' => \DB::table('patients')->where('id', $tokenRecord->patient_id)->exists()
-            ]);
+            // Ambil data patient - use direct query instead of relationship
+            $patient = \App\Models\Patient::find($tokenRecord->patient_id);
             
             if (!$patient) {
-                // Additional debug: try to load patient manually
-                $manualPatient = \App\Models\Patient::find($tokenRecord->patient_id);
-                Log::warning('Web patient not found via relationship', [
+                Log::warning('Web patient not found', [
                     'token_id' => $tokenRecord->id,
                     'patient_id' => $tokenRecord->patient_id,
-                    'manual_patient_found' => $manualPatient ? 'yes' : 'no',
-                    'manual_patient_name' => $manualPatient->full_name ?? 'N/A',
                     'total_patients_in_db' => \App\Models\Patient::count()
                 ]);
                 
@@ -393,19 +379,26 @@ class TemporaryPatientTokenController extends Controller
                 ]);
             }
             
+            Log::info('Web patient found successfully', [
+                'patient_id' => $patient->id,
+                'patient_name' => $patient->full_name,
+                'token_id' => $tokenRecord->id
+            ]);
+            
             // Get patient data
             $patientData = $this->patientService->getPatientData($patient);
             
-            // Mark token as used (sama seperti API method)
-            $tokenRecord->update(['is_used' => true, 'used_at' => now()]);
+            // Don't mark token as used for web interface - allow multiple access
+            // $tokenRecord->update(['is_used' => true, 'used_at' => now()]);
             
             // Log akses
             Log::info('Patient web interface accessed via token', [
                 'token_id' => $tokenRecord->id,
                 'patient_id' => $patient->id,
+                'patient_name' => $patient->full_name,
                 'ip' => request()->ip(),
                 'user_agent' => request()->userAgent(),
-                'token_marked_used' => true
+                'token_reusable' => true
             ]);
 
             return view('patient-token', [
