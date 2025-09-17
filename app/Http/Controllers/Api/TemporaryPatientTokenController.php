@@ -386,7 +386,25 @@ class TemporaryPatientTokenController extends Controller
             ]);
             
             // Get patient data
-            $patientData = $this->patientService->getPatientData($patient);
+            $serviceData = $this->patientService->getPatientData($patient);
+            
+            // Flatten the nested structure for the view compatibility
+            $patientData = array_merge([
+                // Patient info (flattened)
+                'patient_name' => $serviceData['info']['name'] ?? 'Unknown',
+                'patient_data' => $serviceData['info']['medical_record_number'] ?? 'N/A',
+                'height' => $serviceData['latest_record']['height'] ?? 'N/A',
+                'weight' => $serviceData['latest_record']['weight'] ?? 'N/A',
+                'bmi' => $serviceData['latest_record']['bmi'] ?? 'N/A',
+                'diabetes_diagnosis_date' => $serviceData['diabetes_diagnosis_date'] ?? '-',
+                'irs1_rs1801278' => $serviceData['latest_record']['irs1_variant'] ?? 'N/A',
+                'prescription' => $serviceData['latest_record']['prescription'] ?? 'Tidak ada resep tersedia',
+                
+                // Complex data arrays (keep as is)
+                'drugs_consumed' => [], // TODO: Map from medical_history if needed
+                'drug_allergies' => $serviceData['allergies'] ?? [],
+                'genetic_results' => $serviceData['genetic_results'] ?? []
+            ], $serviceData); // Include original structure for future use
             
             // Don't mark token as used for web interface - allow multiple access
             // $tokenRecord->update(['is_used' => true, 'used_at' => now()]);

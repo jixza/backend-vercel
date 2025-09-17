@@ -88,7 +88,7 @@
                 <div class="text-center">
                     <div class="text-xl font-bold text-red-600">Tipe 2</div>
                     <div class="text-gray-500 text-sm">Status Diabetes</div>
-                    <div class="text-xs text-gray-400 mt-1">{{ $patientData['diabetes_diagnosed_since'] !== '-' ? 'Confirmed' : 'N/A' }}</div>
+                    <div class="text-xs text-gray-400 mt-1">{{ isset($patientData['diabetes_diagnosis_date']) && $patientData['diabetes_diagnosis_date'] !== '-' ? 'Confirmed' : 'N/A' }}</div>
                 </div>
             </div>
         </div>
@@ -127,11 +127,11 @@
                     </div>
                 </div>
 
-                @if($patientData['diabetes_diagnosed_since'] !== '-')
+                @if(isset($patientData['diabetes_diagnosis_date']) && $patientData['diabetes_diagnosis_date'] !== '-')
                 <div class="bg-gray-50 rounded-lg p-4">
                     <p class="text-sm text-gray-600">
                         <i class="fas fa-calendar mr-1"></i>
-                        Diabetes didiagnosis sejak: <strong>{{ $patientData['diabetes_diagnosed_since'] }}</strong>
+                        Diabetes didiagnosis sejak: <strong>{{ $patientData['diabetes_diagnosis_date'] }}</strong>
                     </p>
                 </div>
                 @endif
